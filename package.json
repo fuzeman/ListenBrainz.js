@@ -1,6 +1,6 @@
 {
   "name": "@fuzeman/listenbrainz",
-  "version": "1.0.0-alpha.1",
+  "version": "1.0.0-beta.1",
   "description": "Javascript API wrapper for ListenBrainz",
   "homepage": "https://github.com/fuzeman/listenbrainz.js",
   "license": "MIT",

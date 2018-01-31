@@ -1,0 +1,1 @@
+{"version":3,"sources":["interfaces/index.js"],"names":["user"],"mappings":";;;;;;;;;;;;;AAAA;;;;eAKe;AACXA;AADW,C","file":"index.js","sourcesContent":["import _UserInterface from './user';\r\n\r\n\r\nexport {_UserInterface as UserInterface};\r\n\r\nexport default {\r\n    user: _UserInterface\r\n};\r\n"]}
