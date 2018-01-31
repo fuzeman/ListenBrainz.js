@@ -3,23 +3,17 @@ import {isDefined} from '../core/helpers';
 
 
 export default class UserInterface extends Interface {
-    getInfo(username) {
-        var authenticated = true;
-        var params = {};
-
-        if(isDefined(username)) {
-            authenticated = false;
-            params['user'] = username;
+    listens(username, params) {
+        if(!isDefined(username)) {
+            throw new Error('Invalid value provided for the "username" parameter');
         }
 
         // Send request
-        return this.http.get('user.getInfo', {
-            params: params,
-
-            authenticated: authenticated
+        return this.http.get('user/' + username + '/listens', {
+            params: params
         }).then(function(body) {
-            if(isDefined(body) && isDefined(body.user)) {
-                return body.user;
+            if(isDefined(body) && isDefined(body.payload)) {
+                return body.payload;
             }
 
             return null;

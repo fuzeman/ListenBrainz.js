@@ -4,19 +4,10 @@ import {isDefined} from './core/helpers';
 
 
 export class Client {
-    constructor(key, secret, options) {
+    constructor(options) {
         options = isDefined(options) ? options : {};
 
-        this.key = key || null;
-        this.secret = secret || null;
-
-        this.session = null;
-
-        if(isDefined(options.session)) {
-            this.session = options.session;
-        } else if(isDefined(options.sessionKey)) {
-            this.session = {key: options.sessionKey};
-        }
+        this.token = options.token || null;
 
         // Construct http client
         this.http = new HttpClient(this);
@@ -25,24 +16,34 @@ export class Client {
         this._interfaces = this._constructInterfaces();
     }
 
-    get auth() {
-        return this._interfaces['auth'];
-    }
-
-    get track() {
-        return this._interfaces['track'];
-    }
-
     get user() {
         return this._interfaces['user'];
     }
 
-    getSessionKey() {
-        if(!isDefined(this.session) || !isDefined(this.session.key)) {
-            return null;
+    submitListens(type, listens) {
+        if(!isDefined(type) || ['single', 'playing_now', 'import'].indexOf(type) < 0) {
+            throw new Error('Invalid value provided for the "type" parameter');
         }
 
-        return this.session.key;
+        if(!isDefined(listens) || !Array.isArray(listens)) {
+            throw new Error('Invalid value provided for the "listens" parameter');
+        }
+
+        // Send request
+        return this.http.post('submit-listens', {
+            authenticated: true,
+
+            body: {
+                'listen_type': type,
+                'payload': listens
+            }
+        }).then(function(body) {
+            if(isDefined(body) && isDefined(body.payload)) {
+                return body.payload;
+            }
+
+            return null;
+        });
     }
 
     _constructInterfaces() {

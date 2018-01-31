@@ -1,5 +1,3 @@
-import Hex from 'crypto-js/enc-hex';
-import Md5 from 'crypto-js/md5';
 import Merge from 'lodash-amd/merge';
 import QueryString from 'querystring';
 
@@ -9,116 +7,70 @@ import {isDefined} from './helpers';
 export default class HttpClient {
     constructor(client, baseUrl) {
         this._client = client;
-        this._baseUrl = baseUrl || 'https://ws.audioscrobbler.com/2.0/';
+        this._baseUrl = baseUrl || 'https://api.listenbrainz.org/1/';
     }
 
-    get(method, options) {
+    get(path, options) {
         options = Merge({
             params: {},
 
             authenticated: false,
-            sessionKey: this._client.getSessionKey()
+            token: this._client.token
         }, options || {});
 
-        options.signed = isDefined(options.signed) ?
-            options.signed :
-            options.authenticated;
-
-        // Set request parameters
-        options.params['api_key'] = this._client.key;
-        options.params['format'] = 'json';
-        options.params['method'] = method;
+        // Set request headers
+        let headers = new Headers();
 
         if(options.authenticated) {
-            // Add session key
-            if(!isDefined(options.sessionKey)) {
-                throw new Error('Missing required "sessionKey" parameter');
+            if(!isDefined(options.token)) {
+                throw new Error('Missing required "token" parameter');
             }
 
-            options.params['sk'] = options.sessionKey;
-        }
-
-        if(options.signed) {
-            // Generate signature
-            options.params['api_sig'] = this._generateSignature(options.params);
+            headers['Authorization'] = 'Token ' + options.token;
         }
 
         // Send request
-        return fetch(
-            this._baseUrl + '?' + QueryString.encode(options.params)
-        ).then(function(response) {
-            // TODO check status code
-            return response.json();
-        });
-    }
-
-    post(method, options) {
-        options = Merge({
-            params: {},
-
-            authenticated: false,
-            sessionKey: this._client.getSessionKey()
-        }, options || {});
-
-        options.signed = isDefined(options.signed) ?
-            options.signed :
-            options.authenticated;
-
-        // Set request parameters
-        options.params['api_key'] = this._client.key;
-        options.params['format'] = 'json';
-        options.params['method'] = method;
-
-        if(options.authenticated) {
-            // Add session key
-            if(!isDefined(options.sessionKey)) {
-                throw new Error('Missing required "sessionKey" parameter');
-            }
-
-            options.params['sk'] = options.sessionKey;
-        }
-
-        if(options.signed) {
-            // Generate signature
-            options.params['api_sig'] = this._generateSignature(options.params);
-        }
-
-        // Send request
-        return fetch(this._baseUrl, {
-            method: 'POST',
-            body: QueryString.encode(options.params)
+        return fetch(this._baseUrl + path + '?' + QueryString.encode(options.params), {
+            headers: headers
         }).then(function(response) {
             // TODO check status code
             return response.json();
         });
     }
 
-    _generateSignature(params) {
-        var signature = '';
+    post(path, options) {
+        options = Merge({
+            body: null,
 
-        // Append parameters
-        var value;
+            authenticated: false,
+            token: this._client.token
+        }, options || {});
 
-        Object.keys(params).sort().forEach((key) => {
-            if(key === 'format') {
-                return;
+        // Encode body to JSON
+        if(isDefined(options.body)) {
+            options.body = JSON.stringify(options.body);
+        }
+
+        // Set request headers
+        let headers = {};
+
+        if(options.authenticated) {
+            if(!isDefined(options.token)) {
+                throw new Error('Missing required "token" parameter');
             }
 
-            // Retrieve value
-            value = params[key];
+            headers['Authorization'] = 'Token ' + options.token;
+        }
 
-            if(typeof value === 'undefined' || value === null) {
-                value = '';
-            }
+        // Send request
+        return fetch(this._baseUrl + path, {
+            method: 'POST',
+            body: options.body,
 
-            // Append parameter
-            signature += key + value;
+            headers: new Headers(headers)
+        }).then(function(response) {
+            // TODO check status code
+            return response.json();
         });
-
-        // Append client secret
-        signature += this._client.secret;
-
-        // Generate hash
-        return Md5(signature).toString(Hex);
     }
 }
