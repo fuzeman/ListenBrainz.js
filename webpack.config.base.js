@@ -1,5 +1,5 @@
 var path = require('path');
-
+const ESLintPlugin = require('eslint-webpack-plugin');
 
 module.exports = {
     devtool: 'source-map',
@@ -8,6 +8,8 @@ module.exports = {
         'whatwg-fetch',
         __dirname + '/src/index.js'
     ],
+
+    plugins: [new ESLintPlugin()],
 
     output: {
         filename: 'listenbrainz.js',
@@ -27,12 +29,7 @@ module.exports = {
                     path.resolve(__dirname, 'src')
                 ],
 
-                enforce: 'pre',
-                use: [
-                    {
-                        loader: 'eslint-loader'
-                    }
-                ]
+                enforce: 'pre'
             },
             {
                 test: /\.js$/,
